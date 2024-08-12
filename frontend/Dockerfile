@@ -15,7 +15,7 @@ ARG ENV="DEV"
 
 WORKDIR /app
 COPY package.json yarn.lock ./
-RUN yarn add @neo4j-nvl/base @neo4j-nvl/react
+# RUN yarn add @neo4j-nvl/base @neo4j-nvl/react
 RUN yarn install
 COPY . ./
 RUN BACKEND_API_URL=$BACKEND_API_URL \
