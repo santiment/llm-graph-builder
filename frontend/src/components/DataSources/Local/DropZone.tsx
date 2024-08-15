@@ -259,6 +259,7 @@ const DropZone: FunctionComponent = () => {
             'application/vnd.ms-powerpoint': ['.pptx'],
             'application/vnd.ms-excel': ['.xls'],
             'text/markdown': ['.md'],
+            'text/csv': ['.csv']
           },
           onDrop: (f: Partial<globalThis.File>[]) => {
             onDropHandler(f);
