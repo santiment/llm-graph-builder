@@ -1,0 +1,4 @@
+{
+  "dockerFile": "../backend/Dockerfile",
+  "context": "../backend"
+}
