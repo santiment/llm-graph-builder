@@ -2,7 +2,7 @@
 FROM node:20 AS build
 
 ARG BACKEND_API_URL="http://llm-graph-builder-backend.stage.san:31080"
-ARG REACT_APP_SOURCES=""
+ARG REACT_APP_SOURCES="local,youtube,wiki,s3,web"
 ARG LLM_MODELS=""
 ARG GOOGLE_CLIENT_ID=""
 ARG BLOOM_URL="https://workspace-preview.neo4j.io/workspace/explore?connectURL={CONNECT_URL}&search=Show+me+a+graph&featureGenAISuggestions=true&featureGenAISuggestionsInternal=true"
