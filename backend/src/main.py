@@ -199,7 +199,7 @@ def create_source_node_graph_url_wikipedia(graph, model, wiki_query, source_type
     return lst_file_name, success_count, failed_count
 
 
-def extract_graph_from_file_local_file(graph, model, merged_file_path, fileName, allowedNodes, allowedRelationship,
+async def extract_graph_from_file_local_file(graph, model, merged_file_path, fileName, allowedNodes, allowedRelationship,
                                        uri):
     logging.info(f'Process file name :{fileName}')
     gcs_file_cache = os.environ.get('GCS_FILE_CACHE')
@@ -213,11 +213,11 @@ def extract_graph_from_file_local_file(graph, model, merged_file_path, fileName,
     if not pages:
         raise Exception(f'File content is not available for file : {file_name}')
 
-    return processing_source(graph, model, file_name, pages, allowedNodes, allowedRelationship, True, merged_file_path,
+    return await processing_source(graph, model, file_name, pages, allowedNodes, allowedRelationship, True, merged_file_path,
                              uri)
 
 
-def extract_graph_from_file_s3(graph, model, source_url, aws_access_key_id, aws_secret_access_key, allowedNodes,
+async def extract_graph_from_file_s3(graph, model, source_url, aws_access_key_id, aws_secret_access_key, allowedNodes,
                                allowedRelationship):
     if (aws_access_key_id == None or aws_secret_access_key == None):
         raise Exception('Please provide AWS access and secret keys')
@@ -228,47 +228,47 @@ def extract_graph_from_file_s3(graph, model, source_url, aws_access_key_id, aws_
     if pages == None or len(pages) == 0:
         raise Exception(f'File content is not available for file : {file_name}')
 
-    return processing_source(graph, model, file_name, pages, allowedNodes, allowedRelationship)
+    return await processing_source(graph, model, file_name, pages, allowedNodes, allowedRelationship)
 
 
-def extract_graph_from_web_page(graph, model, source_url, allowedNodes, allowedRelationship):
+async def extract_graph_from_web_page(graph, model, source_url, allowedNodes, allowedRelationship):
     file_name, pages = get_documents_from_web_page(source_url)
 
     if pages == None or len(pages) == 0:
         raise Exception(f'Content is not available for given URL : {file_name}')
 
-    return processing_source(graph, model, file_name, pages, allowedNodes, allowedRelationship)
+    return await processing_source(graph, model, file_name, pages, allowedNodes, allowedRelationship)
 
 
-def extract_graph_from_file_youtube(graph, model, source_url, allowedNodes, allowedRelationship):
+async def extract_graph_from_file_youtube(graph, model, source_url, allowedNodes, allowedRelationship):
     file_name, pages = get_documents_from_youtube(source_url)
 
     if pages == None or len(pages) == 0:
         raise Exception(f'Youtube transcript is not available for file : {file_name}')
 
-    return processing_source(graph, model, file_name, pages, allowedNodes, allowedRelationship)
+    return await processing_source(graph, model, file_name, pages, allowedNodes, allowedRelationship)
 
 
-def extract_graph_from_file_Wikipedia(graph, model, wiki_query, max_sources, language, allowedNodes,
+async def extract_graph_from_file_Wikipedia(graph, model, wiki_query, max_sources, language, allowedNodes,
                                       allowedRelationship):
     file_name, pages = get_documents_from_Wikipedia(wiki_query, language)
     if pages == None or len(pages) == 0:
         raise Exception(f'Wikipedia page is not available for file : {file_name}')
 
-    return processing_source(graph, model, file_name, pages, allowedNodes, allowedRelationship)
+    return await processing_source(graph, model, file_name, pages, allowedNodes, allowedRelationship)
 
 
-def extract_graph_from_file_gcs(graph, model, gcs_project_id, gcs_bucket_name, gcs_bucket_folder, gcs_blob_filename,
+async def extract_graph_from_file_gcs(graph, model, gcs_project_id, gcs_bucket_name, gcs_bucket_folder, gcs_blob_filename,
                                 access_token, allowedNodes, allowedRelationship):
     file_name, pages = get_documents_from_gcs(gcs_project_id, gcs_bucket_name, gcs_bucket_folder, gcs_blob_filename,
                                               access_token)
     if pages == None or len(pages) == 0:
         raise Exception(f'File content is not available for file : {file_name}')
 
-    return processing_source(graph, model, file_name, pages, allowedNodes, allowedRelationship)
+    return await processing_source(graph, model, file_name, pages, allowedNodes, allowedRelationship)
 
 
-def processing_source(graph, model, file_name, pages, allowedNodes, allowedRelationship, is_uploaded_from_local=None,
+async def processing_source(graph, model, file_name, pages, allowedNodes, allowedRelationship, is_uploaded_from_local=None,
                       merged_file_path=None, uri=None):
     """
      Extracts a Neo4jGraph from a PDF file based on the model.
@@ -333,7 +333,7 @@ def processing_source(graph, model, file_name, pages, allowedNodes, allowedRelat
                 logging.info('Exit from running loop of processing file')
                 exit  # NOTE: ????
             else:
-                node_count, rel_count = processing_chunks(selected_chunks, graph, file_name, model, allowedNodes,
+                node_count, rel_count = await processing_chunks(selected_chunks, graph, file_name, model, allowedNodes,
                                                           allowedRelationship, node_count, rel_count)
                 end_time = datetime.now()
                 processed_time = end_time - start_time
@@ -387,12 +387,12 @@ def processing_source(graph, model, file_name, pages, allowedNodes, allowedRelat
         logging.info('File does not process because it\'s already in Processing status')
 
 
-def processing_chunks(chunkId_chunkDoc_list, graph, file_name, model, allowedNodes, allowedRelationship, node_count,
+async def processing_chunks(chunkId_chunkDoc_list, graph, file_name, model, allowedNodes, allowedRelationship, node_count,
                       rel_count):
     # create vector index and update chunk node with embedding
     update_embedding_create_vector_index(graph, chunkId_chunkDoc_list, file_name)
     logging.info("Get graph document list from models")
-    graph_documents = generate_graphDocuments(model, graph, chunkId_chunkDoc_list, allowedNodes, allowedRelationship)
+    graph_documents = await generate_graphDocuments(model, graph, chunkId_chunkDoc_list, allowedNodes, allowedRelationship)
     save_graphDocuments_in_neo4j(graph, graph_documents)
     chunks_and_graphDocuments_list = get_chunk_and_graphDocument(graph_documents, chunkId_chunkDoc_list)
     merge_relationship_between_chunk_and_entites(graph, chunks_and_graphDocuments_list)
