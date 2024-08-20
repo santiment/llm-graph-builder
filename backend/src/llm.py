@@ -23,7 +23,7 @@ from langchain_aws import ChatBedrock
 from langchain_community.chat_models import ChatOllama
 import boto3
 import google.auth
-from pydantic import BaseModel, Field, create_model
+from langchain_core.pydantic_v1 import BaseModel, Field, create_model
 
 from src.shared.constants import MODEL_VERSIONS
 
