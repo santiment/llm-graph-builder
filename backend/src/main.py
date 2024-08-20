@@ -292,7 +292,6 @@ def processing_source(graph, model, file_name, pages, allowedNodes, allowedRelat
     logging.info("Break down file into chunks")
     bad_chars = ['"', "\n", "'"]
     for i in range(0, len(pages)):
-        text = pages[i].page_content
         for j in bad_chars:
             if j == '\n':
                 pages[i].page_content.replace(j, ' ')
