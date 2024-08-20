@@ -40,6 +40,7 @@ slaveTemplates.dockerTemplate { label ->
                             sh "docker tag llm-graph-builder-backend:latest ${awsRegistry}/llm-graph-builder-backend:latest"
                             sh "docker push ${awsRegistry}/llm-graph-builder-frontend:latest"
                             sh "docker push ${awsRegistry}/llm-graph-builder-backend:latest"
+                            sh "kubectl rollout restart deployment/llm-graph-builder"
                         }
                     }
                 }
