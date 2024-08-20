@@ -408,14 +408,23 @@ def get_graph_document_list(
             )
     structured_llm = llm.with_structured_output(schema, include_raw=True)
     llm_transformer.chain = prompt | structured_llm
-    for chunk in combined_chunk_document_list:
-        chunk_doc = Document(
-            page_content=chunk.page_content.encode("utf-8"), metadata=chunk.metadata
-        )
-        futures.append(
-            llm_transformer.aconvert_to_graph_documents([chunk_doc])
-        )
-    results = asyncio.gather(*futures)
+
+    try:
+        old_loop = asyncio.get_event_loop()
+    except Exception:
+        old_loop = None
+
+    with asyncio.new_event_loop() as ev:
+        asyncio.set_event_loop(ev)
+        for chunk in combined_chunk_document_list:
+            chunk_doc = Document(
+                page_content=chunk.page_content.encode("utf-8"), metadata=chunk.metadata
+            )
+            futures.append(
+                llm_transformer.aconvert_to_graph_documents([chunk_doc])
+            )
+        results = asyncio.gather(*futures)
+        asyncio.set_event_loop(old_loop)
     for graph_document in results:
         graph_document_list.append(graph_document[0])
 
