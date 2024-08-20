@@ -11,7 +11,7 @@ from src.llm import get_graph_from_llm
 logging.basicConfig(format="%(asctime)s - %(message)s", level="INFO")
 
 
-def generate_graphDocuments(model: str, graph: Neo4jGraph, chunkId_chunkDoc_list: List, allowedNodes=None, allowedRelationship=None):
+async def generate_graphDocuments(model: str, graph: Neo4jGraph, chunkId_chunkDoc_list: List, allowedNodes=None, allowedRelationship=None):
     
     if  allowedNodes is None or allowedNodes=="":
         allowedNodes =[]
@@ -29,7 +29,7 @@ def generate_graphDocuments(model: str, graph: Neo4jGraph, chunkId_chunkDoc_list
         graph_documents = get_graph_from_diffbot(graph, chunkId_chunkDoc_list)
 
     elif model in OPENAI_MODELS:
-        graph_documents = get_graph_from_OpenAI(model, graph, chunkId_chunkDoc_list, allowedNodes, allowedRelationship)
+        graph_documents = await get_graph_from_OpenAI(model, graph, chunkId_chunkDoc_list, allowedNodes, allowedRelationship)
 
     elif model in GEMINI_MODELS:
         graph_documents = get_graph_from_Gemini(model, graph, chunkId_chunkDoc_list, allowedNodes, allowedRelationship)
