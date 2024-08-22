@@ -15,7 +15,7 @@ from langchain_groq import ChatGroq
 from langchain_google_vertexai import HarmBlockThreshold, HarmCategory
 from langchain_experimental.graph_transformers.diffbot import DiffbotGraphTransformer
 import concurrent.futures
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutora
 from langchain_experimental.graph_transformers import LLMGraphTransformer
 from langchain_anthropic import ChatAnthropic
 from langchain_fireworks import ChatFireworks
@@ -174,8 +174,10 @@ system_prompt = (
     "structured formats to build a knowledge graph."
     "You are created by Santiment company. They provide cryptoanalytics based on onchain and social data"
     "Most likely you will deal with social posts of users describing their experience with crypto, or some news and rumors"
+    "Pay special attention to hype, shills, drama, gossip, opinions - anything that people are particularly happy or angry about."
     "Try to capture as much information from the text as possible without "
-    "sacrificing accuracy. You can write comments and analysis but within special 'thoughts' field."
+    "sacrificing accuracy. First, you need to analyse the data and put the analysis into 'thoughts' field,"
+    "then, you proceed with information extraction"
     "For other fields - do not add any information that is not explicitly "
     "mentioned in the text.\n"
     "- **Nodes** represent entities and concepts.\n"
@@ -380,8 +382,6 @@ def create_simple_model_with_thoughts(
 async def get_graph_document_list(
     llm, combined_chunk_document_list, allowed_nodes, allowed_relationship
 ):
-    futures = []
-    graph_document_list = []
     if llm.get_name() == "ChatOllama":
         node_properties = False
     else:
@@ -409,24 +409,22 @@ async def get_graph_document_list(
     structured_llm = llm.with_structured_output(schema, include_raw=True)
     llm_transformer.chain = prompt | structured_llm
 
+    futures = []
     for chunk in combined_chunk_document_list:
         chunk_doc = Document(
             page_content=chunk.page_content.encode("utf-8"), metadata=chunk.metadata
         )
         futures.append(
-            llm_transformer.aconvert_to_graph_documents([chunk_doc])
+            llm_transformer.aprocess_response(chunk_doc)
         )
-    results = await asyncio.gather(*futures)
-    for graph_document in results:
-        graph_document_list.append(graph_document[0])
 
-    return graph_document_list
+    return await asyncio.gather(*futures)
 
 
-def get_graph_from_llm(model, chunkId_chunkDoc_list, allowedNodes, allowedRelationship):
+async def get_graph_from_llm(model, chunkId_chunkDoc_list, allowedNodes, allowedRelationship):
     llm, model_name = get_llm(model)
     combined_chunk_document_list = get_combined_chunks(chunkId_chunkDoc_list)
-    graph_document_list = get_graph_document_list(
+    graph_document_list = await get_graph_document_list(
         llm, combined_chunk_document_list, allowedNodes, allowedRelationship
     )
     return graph_document_list

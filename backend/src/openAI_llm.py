@@ -17,7 +17,7 @@ async def get_graph_from_OpenAI(model_version, graph, chunkId_chunkDoc_list, all
     combined_chunk_document_list = get_combined_chunks(chunkId_chunkDoc_list)
     
     llm,model_name = get_llm(model_version)  
-    return  await get_graph_document_list(llm, combined_chunk_document_list, allowedNodes, allowedRelationship)
+    return await get_graph_document_list(llm, combined_chunk_document_list, allowedNodes, allowedRelationship)
            
         
     
